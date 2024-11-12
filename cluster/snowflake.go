@@ -34,7 +34,7 @@ type (
 func NewSnowflakeNodeWithEndpoint(ctx context.Context, client redis.UniversalClient, endpoint *Endpoint) (
 	*SnowflakeNode, error,
 ) {
-	return NewSnowflakeNode(ctx, client, endpoint.Service, endpoint.nodeID)
+	return NewSnowflakeNode(ctx, client, endpoint.service, endpoint.nodeID)
 }
 
 // NewSnowflakeNode
