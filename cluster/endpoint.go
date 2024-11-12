@@ -10,15 +10,21 @@ import (
 )
 
 type Endpoint struct {
-	Service string
-	Host    string
-	Port    uint16
+	service string
+	host    string
+	port    uint16
 
 	nodeID string
 
 	metadata Metadata
 	healthy  *HealthyConfig
 }
+
+func (e *Endpoint) Service() string    { return e.service }
+func (e *Endpoint) Host() string       { return e.host }
+func (e *Endpoint) Port() uint16       { return e.port }
+func (e *Endpoint) NodeID() string     { return e.nodeID }
+func (e *Endpoint) Metadata() Metadata { return e.metadata }
 
 type EndpointOption func(*Endpoint)
 
@@ -42,9 +48,9 @@ func WithNodeID(nodeID string) EndpointOption {
 
 func NewEndpoint(service, host string, port uint16, options ...EndpointOption) *Endpoint {
 	endpoint := &Endpoint{
-		Service:  service,
-		Host:     host,
-		Port:     port,
+		service:  service,
+		host:     host,
+		port:     port,
 		nodeID:   uuid.New().String(),
 		metadata: Metadata{},
 	}
@@ -63,7 +69,7 @@ func (e *Endpoint) Healthy(ctx context.Context) error {
 	case HTTP:
 		err = HTTPHealthCheck(ctx, e.healthy)
 	case GRPC:
-		err = GRPCHealthCheck(ctx, e.healthy, e.Service, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		err = GRPCHealthCheck(ctx, e.healthy, e.service, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	default:
 		return fmt.Errorf("unknown protocol: %v", e.healthy.Protocol.protocol())
 	}
