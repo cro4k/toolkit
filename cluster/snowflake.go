@@ -2,7 +2,9 @@ package cluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
@@ -51,6 +53,7 @@ func NewSnowflakeNode(ctx context.Context, client redis.UniversalClient, service
 	if err != nil {
 		return nil, err
 	}
+	SetupSnowflakeNode(node)
 	snode := &SnowflakeNode{
 		Node:    node,
 		service: service,
@@ -102,4 +105,24 @@ func (s *SnowflakeNode) Stop(ctx context.Context) error {
 
 func (s *SnowflakeNode) Runner() SnowflakeNodeRunner {
 	return s
+}
+
+var (
+	instance     *snowflake.Node
+	instanceOnce sync.Once
+)
+
+func SetupSnowflakeNode(node *snowflake.Node) {
+	instanceOnce.Do(func() { instance = node })
+}
+
+func SnowflakeID() snowflake.ID {
+	if instance == nil {
+		panic(errors.New("snowflake node is not initialized"))
+	}
+	return instance.Generate()
+}
+
+func SnowflakeIDInt64() int64 {
+	return SnowflakeID().Int64()
 }
