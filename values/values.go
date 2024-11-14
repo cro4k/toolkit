@@ -79,13 +79,6 @@ func ThenAny[T any](then, a, b any) T {
 	return t
 }
 
-func NotNil[T any](v T, def T) T {
-	if v != nil {
-		return v
-	}
-	return def
-}
-
 func Contains[T comparable](list []T, v T) bool {
 	for _, item := range list {
 		if item == v {
