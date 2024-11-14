@@ -38,6 +38,8 @@ type (
 		id      string
 		index   int64
 		client  redis.UniversalClient
+
+		cancel context.CancelFunc
 	}
 )
 
@@ -95,6 +97,7 @@ func resolveIndex(ctx context.Context, client redis.UniversalClient, service, id
 }
 
 func (s *SnowflakeNode) Start(ctx context.Context) error {
+	ctx, s.cancel = context.WithCancel(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -107,6 +110,7 @@ func (s *SnowflakeNode) Start(ctx context.Context) error {
 }
 
 func (s *SnowflakeNode) Stop(ctx context.Context) error {
+	defer s.cancel()
 	key := fmt.Sprintf("%s:%s:%d", snowflakeNodeLeasePrefix, s.service, s.index)
 	return s.client.Del(ctx, key).Err()
 }
