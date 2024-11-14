@@ -15,9 +15,9 @@ type client struct {
 	storage sync.Map
 }
 
-func (c *client) SetEx(_ context.Context, key string, value any, _ time.Duration) *redis.StatusCmd {
-	val, _ := c.storage.LoadOrStore(key, value)
-	return redis.NewStatusResult(val.(string), nil)
+func (c *client) SetNX(ctx context.Context, key string, value any, _ time.Duration) *redis.BoolCmd {
+	_, exist := c.storage.LoadOrStore(key, value)
+	return redis.NewBoolResult(!exist, nil)
 }
 
 func (c *client) Set(_ context.Context, key string, value any, _ time.Duration) *redis.StatusCmd {

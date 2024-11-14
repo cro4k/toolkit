@@ -18,6 +18,14 @@ const (
 	snowflakeNodeLeasePrefix     = "SNOWFLAKE_NODE_LEASE"
 )
 
+const script = `local current = redis.call("GET", KEYS[1])
+if current then
+    return current
+else
+    redis.call("SET", KEYS[1], ARGV[1])
+    return ARGV[1]
+end`
+
 type (
 	SnowflakeNodeRunner interface {
 		Start(ctx context.Context) error
@@ -68,11 +76,11 @@ func resolveIndex(ctx context.Context, client redis.UniversalClient, service, id
 	var index int64
 	for index < snowflakeNodeMaxIndex {
 		key := fmt.Sprintf("%s:%s:%d", snowflakeNodeLeasePrefix, service, index)
-		val, err := client.SetEx(ctx, key, id, snowflakeNodeLeaseExpiration).Result()
+		success, err := client.SetNX(ctx, key, id, snowflakeNodeLeaseExpiration).Result()
 		if err != nil {
 			return 0, err
 		}
-		if val == id {
+		if success {
 			return index, nil
 		}
 		index++
